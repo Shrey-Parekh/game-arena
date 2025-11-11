@@ -1,5 +1,7 @@
 import { useGame } from '../../contexts/GameContext'
 import TruthOrDare from '../games/TruthOrDare'
+import ParticlesBackground from '../common/ParticlesBackground'
+import CustomCursor from '../common/CustomCursor'
 
 function GameRoom() {
   const { gameType } = useGame()
@@ -10,17 +12,23 @@ function GameRoom() {
         return <TruthOrDare />
       default:
         return (
-          <div className="text-center py-12">
-            <p className="text-text/70">Game type not supported yet</p>
+          <div className="min-h-screen flex items-center justify-center p-4">
+            <div className="card text-center max-w-md">
+              <p className="text-xl text-textLight">Game type not supported yet</p>
+            </div>
           </div>
         )
     }
   }
 
   return (
-    <div className="max-w-6xl mx-auto">
-      {renderGame()}
-    </div>
+    <>
+      <CustomCursor />
+      <ParticlesBackground />
+      <div className="min-h-screen content-wrapper">
+        {renderGame()}
+      </div>
+    </>
   )
 }
 

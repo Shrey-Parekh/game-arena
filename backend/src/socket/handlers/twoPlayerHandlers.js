@@ -5,12 +5,16 @@ export function setupTwoPlayerHandlers(io, socket) {
   
   // Start game
   socket.on('start-game', async (data) => {
+    console.log('📥 Received start-game event:', data)
     try {
       const { roomCode, gameType } = data
       const userId = socket.userId
 
+      console.log('User attempting to start game:', { userId, roomCode, gameType })
+
       const room = roomManager.getRoom(roomCode)
       if (!room) {
+        console.error('❌ Room not found:', roomCode)
         return socket.emit('error', { 
           code: 'ROOM_NOT_FOUND', 
           message: 'Room not found' 
@@ -18,48 +22,44 @@ export function setupTwoPlayerHandlers(io, socket) {
       }
 
       if (room.hostId !== userId) {
+        console.error('❌ User is not host:', { userId, hostId: room.hostId })
         return socket.emit('error', { 
           code: 'NOT_HOST', 
           message: 'Only host can start the game' 
         })
       }
 
+      // Make sure socket is in the room
+      if (!socket.rooms.has(roomCode)) {
+        console.log('⚠️ Socket not in room, joining now:', roomCode)
+        socket.join(roomCode)
+      }
+
       // Initialize game state for Truth or Dare
       if (gameType === 'truth-or-dare') {
-        const players = Array.from(room.players.keys())
-        const randomIndex = Math.floor(Math.random() * players.length)
-        
         const gameState = {
-          activePlayerId: players[randomIndex],
+          mode: null,
           spiceLevel: 'mild',
           currentQuestion: null,
-          roundNumber: 1,
-          usedQuestionIds: [],
-          timerStartedAt: null,
-          timerDuration: 60,
-          scores: {}
+          roundNumber: 0,
+          usedQuestionIds: []
         }
-
-        // Initialize scores
-        players.forEach(playerId => {
-          gameState.scores[playerId] = 0
-        })
 
         roomManager.startGame(roomCode, gameType)
         roomManager.updateGameState(roomCode, gameState)
 
+        console.log('📤 Emitting game-started to room:', roomCode)
+        console.log('Sockets in room:', io.sockets.adapter.rooms.get(roomCode)?.size || 0)
+        
         // Notify all players
         io.to(roomCode).emit('game-started', { 
           gameType, 
           gameState 
         })
 
-        io.to(roomCode).emit('turn-started', { 
-          activePlayerId: gameState.activePlayerId,
-          spiceLevel: gameState.spiceLevel
-        })
-
         console.log(`✓ Game started in room ${roomCode}: ${gameType}`)
+      } else {
+        console.error('❌ Unsupported game type:', gameType)
       }
     } catch (error) {
       console.error('Start game error:', error)
@@ -70,10 +70,10 @@ export function setupTwoPlayerHandlers(io, socket) {
     }
   })
 
-  // Select truth or dare
-  socket.on('select-truth-or-dare', async (data) => {
+  // Select mode (host only)
+  socket.on('select-mode', async (data) => {
     try {
-      const { roomCode, choice, spiceLevel } = data
+      const { roomCode, mode, spiceLevel } = data
       const userId = socket.userId
 
       const room = roomManager.getRoom(roomCode)
@@ -84,22 +84,98 @@ export function setupTwoPlayerHandlers(io, socket) {
         })
       }
 
-      if (room.gameState.activePlayerId !== userId) {
+      if (room.hostId !== userId) {
         return socket.emit('error', { 
-          code: 'NOT_YOUR_TURN', 
-          message: 'Wait for your turn' 
+          code: 'NOT_HOST', 
+          message: 'Only host can select mode' 
         })
       }
 
-      // Update spice level if provided
+      // Update game state
+      room.gameState.mode = mode
+      room.gameState.spiceLevel = spiceLevel || 'mild'
+
+      // Notify all players
+      io.to(roomCode).emit('mode-selected', {
+        mode,
+        spiceLevel: room.gameState.spiceLevel
+      })
+
+      console.log(`✓ Mode selected in room ${roomCode}: ${mode}`)
+    } catch (error) {
+      console.error('Select mode error:', error)
+      socket.emit('error', { 
+        code: 'INTERNAL_ERROR', 
+        message: 'Failed to select mode' 
+      })
+    }
+  })
+
+  // Change spice level (host only)
+  socket.on('change-spice-level', async (data) => {
+    try {
+      const { roomCode, spiceLevel } = data
+      const userId = socket.userId
+
+      const room = roomManager.getRoom(roomCode)
+      if (!room || !room.gameState) {
+        return socket.emit('error', { 
+          code: 'INVALID_STATE', 
+          message: 'Game not in valid state' 
+        })
+      }
+
+      if (room.hostId !== userId) {
+        return socket.emit('error', { 
+          code: 'NOT_HOST', 
+          message: 'Only host can change spice level' 
+        })
+      }
+
+      // Update spice level
+      room.gameState.spiceLevel = spiceLevel
+
+      // Notify all players
+      io.to(roomCode).emit('spice-level-changed', {
+        spiceLevel
+      })
+
+      console.log(`✓ Spice level changed in room ${roomCode}: ${spiceLevel}`)
+    } catch (error) {
+      console.error('Change spice level error:', error)
+      socket.emit('error', { 
+        code: 'INTERNAL_ERROR', 
+        message: 'Failed to change spice level' 
+      })
+    }
+  })
+
+  // Select truth or dare
+  socket.on('select-truth-or-dare', async (data) => {
+    try {
+      const { roomCode, choice, spiceLevel, mode } = data
+
+      const room = roomManager.getRoom(roomCode)
+      if (!room || !room.gameState) {
+        return socket.emit('error', { 
+          code: 'INVALID_STATE', 
+          message: 'Game not in valid state' 
+        })
+      }
+
+      // Update spice level and mode if provided
       if (spiceLevel) {
         room.gameState.spiceLevel = spiceLevel
+      }
+      if (mode) {
+        room.gameState.mode = mode
       }
 
       // Get random question
       const { data: question, error } = await getRandomQuestion(
         choice, 
         room.gameState.spiceLevel,
+        room.gameState.mode || 'friends',
         room.gameState.usedQuestionIds
       )
 
@@ -113,14 +189,14 @@ export function setupTwoPlayerHandlers(io, socket) {
       // Update game state
       room.gameState.currentQuestion = question
       room.gameState.usedQuestionIds.push(question.id)
-      room.gameState.timerStartedAt = new Date()
+      room.gameState.roundNumber++
 
       // Emit question to all players
       io.to(roomCode).emit('question-presented', {
         question: question.content,
         type: choice,
-        timer: 60,
-        points: question.points
+        mode: room.gameState.mode,
+        spiceLevel: room.gameState.spiceLevel
       })
 
       console.log(`✓ Question presented in room ${roomCode}`)
@@ -133,150 +209,80 @@ export function setupTwoPlayerHandlers(io, socket) {
     }
   })
 
-  // Submit answer
-  socket.on('submit-answer', async (data) => {
-    try {
-      const { roomCode, answer } = data
-      const userId = socket.userId
-
-      const room = roomManager.getRoom(roomCode)
-      if (!room || !room.gameState) {
-        return socket.emit('error', { 
-          code: 'INVALID_STATE', 
-          message: 'Game not in valid state' 
-        })
-      }
-
-      if (room.gameState.activePlayerId !== userId) {
-        return socket.emit('error', { 
-          code: 'NOT_YOUR_TURN', 
-          message: 'Wait for your turn' 
-        })
-      }
-
-      // Award points
-      const points = room.gameState.currentQuestion?.points || 10
-      room.gameState.scores[userId] = (room.gameState.scores[userId] || 0) + points
-
-      // Update player score in memory
-      const player = room.players.get(userId)
-      if (player) {
-        player.score = room.gameState.scores[userId]
-      }
-
-      // Check for winner (first to 5 points)
-      const winnerThreshold = 5
-      if (room.gameState.scores[userId] >= winnerThreshold) {
-        // Game over
-        roomManager.endGame(roomCode)
-        
-        const winner = room.players.get(userId)
-        io.to(roomCode).emit('game-ended', {
-          winner: {
-            userId: winner.userId,
-            username: winner.username,
-            email: winner.email
-          },
-          finalScores: room.gameState.scores
-        })
-
-        console.log(`✓ Game ended in room ${roomCode}, winner: ${winner.username}`)
-        return
-      }
-
-      // Switch to next player
-      const players = Array.from(room.players.keys())
-      const currentIndex = players.indexOf(userId)
-      const nextIndex = (currentIndex + 1) % players.length
-      const nextPlayerId = players[nextIndex]
-
-      room.gameState.activePlayerId = nextPlayerId
-      room.gameState.currentQuestion = null
-      room.gameState.roundNumber++
-
-      // Emit round ended
-      io.to(roomCode).emit('answer-submitted', {
-        playerId: userId,
-        points: room.gameState.scores[userId]
-      })
-
-      io.to(roomCode).emit('round-ended', {
-        scores: room.gameState.scores,
-        nextPlayerId
-      })
-
-      io.to(roomCode).emit('turn-started', {
-        activePlayerId: nextPlayerId,
-        spiceLevel: room.gameState.spiceLevel
-      })
-
-      console.log(`✓ Answer submitted in room ${roomCode}, next player: ${nextPlayerId}`)
-    } catch (error) {
-      console.error('Submit answer error:', error)
-      socket.emit('error', { 
-        code: 'INTERNAL_ERROR', 
-        message: 'Failed to submit answer' 
-      })
-    }
-  })
-
-  // Skip turn
-  socket.on('skip-turn', async (data) => {
+  // Next question (host only)
+  socket.on('next-question', async (data) => {
     try {
       const { roomCode } = data
       const userId = socket.userId
 
       const room = roomManager.getRoom(roomCode)
-      if (!room || !room.gameState) {
+      if (!room) {
         return socket.emit('error', { 
-          code: 'INVALID_STATE', 
-          message: 'Game not in valid state' 
+          code: 'ROOM_NOT_FOUND', 
+          message: 'Room not found' 
         })
       }
 
-      if (room.gameState.activePlayerId !== userId) {
+      if (room.hostId !== userId) {
         return socket.emit('error', { 
-          code: 'NOT_YOUR_TURN', 
-          message: 'Wait for your turn' 
+          code: 'NOT_HOST', 
+          message: 'Only host can go to next question' 
         })
       }
 
-      // Deduct point
-      room.gameState.scores[userId] = Math.max(0, (room.gameState.scores[userId] || 0) - 1)
-
-      // Update player score
-      const player = room.players.get(userId)
-      if (player) {
-        player.score = room.gameState.scores[userId]
-      }
-
-      // Switch to next player
-      const players = Array.from(room.players.keys())
-      const currentIndex = players.indexOf(userId)
-      const nextIndex = (currentIndex + 1) % players.length
-      const nextPlayerId = players[nextIndex]
-
-      room.gameState.activePlayerId = nextPlayerId
+      // Clear current question
       room.gameState.currentQuestion = null
-      room.gameState.roundNumber++
 
-      // Emit events
-      io.to(roomCode).emit('round-ended', {
-        scores: room.gameState.scores,
-        nextPlayerId
-      })
+      // Notify all players to show selection screen
+      io.to(roomCode).emit('show-selection')
 
-      io.to(roomCode).emit('turn-started', {
-        activePlayerId: nextPlayerId,
-        spiceLevel: room.gameState.spiceLevel
-      })
-
-      console.log(`✓ Turn skipped in room ${roomCode}`)
+      console.log(`✓ Next question requested in room ${roomCode}`)
     } catch (error) {
-      console.error('Skip turn error:', error)
+      console.error('Next question error:', error)
       socket.emit('error', { 
         code: 'INTERNAL_ERROR', 
-        message: 'Failed to skip turn' 
+        message: 'Failed to go to next question' 
+      })
+    }
+  })
+
+  // Send chat message
+  socket.on('send-chat-message', async (data) => {
+    try {
+      const { roomCode, message, image } = data
+      const userId = socket.userId
+
+      const room = roomManager.getRoom(roomCode)
+      if (!room) {
+        return socket.emit('error', { 
+          code: 'ROOM_NOT_FOUND', 
+          message: 'Room not found' 
+        })
+      }
+
+      const player = room.players.get(userId)
+      if (!player) {
+        return socket.emit('error', { 
+          code: 'PLAYER_NOT_FOUND', 
+          message: 'Player not in room' 
+        })
+      }
+
+      // Broadcast message to all players in room
+      io.to(roomCode).emit('chat-message', {
+        playerId: userId,
+        playerName: player.username || player.email,
+        message: message ? message.trim() : '',
+        image: image || null,
+        timestamp: new Date().toISOString()
+      })
+
+      console.log(`✓ Chat message sent in room ${roomCode}`)
+    } catch (error) {
+      console.error('Send chat message error:', error)
+      socket.emit('error', { 
+        code: 'INTERNAL_ERROR', 
+        message: 'Failed to send message' 
       })
     }
   })

@@ -21,22 +21,27 @@ export const SocketProvider = ({ children }) => {
 
   useEffect(() => {
     if (session?.access_token && user) {
+      console.log('Creating new socket connection...')
       const newSocket = createSocketConnection(session.access_token)
 
       newSocket.on('connect', () => {
+        console.log('Socket connected in context')
         setConnected(true)
         setReconnecting(false)
       })
 
-      newSocket.on('disconnect', () => {
+      newSocket.on('disconnect', (reason) => {
+        console.log('Socket disconnected in context:', reason)
         setConnected(false)
       })
 
       newSocket.on('reconnecting', () => {
+        console.log('Socket reconnecting...')
         setReconnecting(true)
       })
 
       newSocket.on('reconnect', () => {
+        console.log('Socket reconnected')
         setReconnecting(false)
         setConnected(true)
       })
@@ -49,10 +54,12 @@ export const SocketProvider = ({ children }) => {
       setSocket(newSocket)
 
       return () => {
+        console.log('Cleaning up socket connection')
         newSocket.close()
       }
     } else {
       if (socket) {
+        console.log('No auth, closing socket')
         socket.close()
         setSocket(null)
         setConnected(false)

@@ -1,12 +1,13 @@
 import { supabase } from '../config/supabase.js'
 
-export async function getRandomQuestion(type, spiceLevel, excludeIds = []) {
+export async function getRandomQuestion(type, spiceLevel, mode = 'friends', excludeIds = []) {
   try {
     let query = supabase
       .from('truth_or_dare_questions')
       .select('*')
       .eq('type', type)
       .eq('spice_level', spiceLevel)
+      .eq('mode', mode)
 
     if (excludeIds.length > 0) {
       query = query.not('id', 'in', `(${excludeIds.join(',')})`)

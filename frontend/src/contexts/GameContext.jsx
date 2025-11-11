@@ -42,9 +42,11 @@ export const GameProvider = ({ children }) => {
     })
 
     socket.on('game-started', (data) => {
+      console.log('🎮 Game started event received:', data)
       setGameType(data.gameType)
       setGameState(data.gameState)
       setGameStatus('playing')
+      console.log('Game status set to playing')
     })
 
     socket.on('game-ended', (data) => {
@@ -63,6 +65,27 @@ export const GameProvider = ({ children }) => {
       }
     })
 
+    socket.on('player-rejoined', (data) => {
+      console.log('You rejoined the room:', data)
+      setPlayers(data.players)
+      if (data.gameState) {
+        setGameState(data.gameState)
+      }
+      if (data.gameType) {
+        setGameType(data.gameType)
+        setGameStatus('playing')
+      }
+    })
+
+    // Rejoin room on reconnect
+    socket.on('connect', () => {
+      console.log('Socket reconnected, attempting to rejoin room...')
+      if (roomCode) {
+        console.log('Rejoining room:', roomCode)
+        socket.emit('rejoin-room', { roomCode })
+      }
+    })
+
     return () => {
       socket.off('room-created')
       socket.off('player-joined')
@@ -71,8 +94,10 @@ export const GameProvider = ({ children }) => {
       socket.off('game-ended')
       socket.off('player-disconnected')
       socket.off('player-reconnected')
+      socket.off('player-rejoined')
+      socket.off('connect')
     }
-  }, [socket])
+  }, [socket, roomCode])
 
   const createRoom = (mode) => {
     if (socket) {
@@ -90,14 +115,20 @@ export const GameProvider = ({ children }) => {
 
   const leaveRoom = () => {
     if (socket && roomCode) {
+      console.log('Leaving room:', roomCode)
       socket.emit('leave-room', { roomCode })
-      resetGameState()
     }
+    // Always reset state when leaving
+    resetGameState()
   }
 
   const startGame = (selectedGameType) => {
+    console.log('startGame called', { socket: !!socket, roomCode, isHost, selectedGameType })
     if (socket && roomCode && isHost) {
+      console.log('Emitting start-game to server')
       socket.emit('start-game', { roomCode, gameType: selectedGameType })
+    } else {
+      console.error('Cannot start game:', { hasSocket: !!socket, roomCode, isHost })
     }
   }
 

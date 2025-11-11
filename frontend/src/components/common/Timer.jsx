@@ -38,23 +38,23 @@ function Timer({ duration, onComplete, warning = 10 }) {
 
   return (
     <div className="flex flex-col items-center">
-      <div className="relative w-32 h-32">
-        <svg className="transform -rotate-90 w-32 h-32">
+      <div className="relative w-24 h-24 sm:w-32 sm:h-32">
+        <svg className="transform -rotate-90 w-full h-full">
           <circle
-            cx="64"
-            cy="64"
+            cx="50%"
+            cy="50%"
             r="45"
             stroke="currentColor"
-            strokeWidth="8"
+            strokeWidth="6"
             fill="transparent"
-            className="text-surface"
+            className="text-border"
           />
           <motion.circle
-            cx="64"
-            cy="64"
+            cx="50%"
+            cy="50%"
             r="45"
             stroke="currentColor"
-            strokeWidth="8"
+            strokeWidth="6"
             fill="transparent"
             strokeDasharray={circumference}
             strokeDashoffset={circumference - (percentage / 100) * circumference}
@@ -65,13 +65,13 @@ function Timer({ duration, onComplete, warning = 10 }) {
           />
         </svg>
         <div className="absolute inset-0 flex items-center justify-center">
-          <span className={`text-3xl font-bold ${isWarning ? 'text-red-500' : 'text-text'}`}>
+          <span className={`text-2xl sm:text-3xl font-bold ${isWarning ? 'text-red-500' : 'text-text'}`}>
             {timeLeft}
           </span>
         </div>
       </div>
       {isWarning && (
-        <p className="text-red-500 text-sm mt-2 animate-pulse">
+        <p className="text-red-500 text-xs sm:text-sm mt-2 animate-pulse font-bold">
           Time running out!
         </p>
       )}

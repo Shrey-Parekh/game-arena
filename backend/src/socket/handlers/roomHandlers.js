@@ -137,6 +137,59 @@ export function setupRoomHandlers(io, socket) {
     }
   })
 
+  // Rejoin room (for reconnections)
+  socket.on('rejoin-room', async (data) => {
+    try {
+      const { roomCode } = data
+      const userId = socket.userId
+
+      const room = roomManager.getRoom(roomCode)
+      if (!room) {
+        return socket.emit('error', { 
+          code: 'ROOM_NOT_FOUND', 
+          message: 'Room not found' 
+        })
+      }
+
+      // Check if player is in the room
+      const player = room.players.get(userId)
+      if (!player) {
+        return socket.emit('error', { 
+          code: 'NOT_IN_ROOM', 
+          message: 'You are not in this room' 
+        })
+      }
+
+      // Update socket ID and connection status
+      roomManager.updatePlayerSocket(roomCode, userId, socket.id)
+      roomManager.updatePlayerConnection(roomCode, userId, true)
+
+      // Join socket room
+      socket.join(roomCode)
+
+      // Send current state
+      const players = roomManager.getPlayersArray(roomCode)
+      socket.emit('player-rejoined', { 
+        players,
+        gameState: room.gameState,
+        gameType: room.gameType
+      })
+
+      // Notify others
+      io.to(roomCode).emit('player-reconnected', { 
+        playerId: userId 
+      })
+
+      console.log(`✓ Player ${socket.userEmail} rejoined room ${roomCode}`)
+    } catch (error) {
+      console.error('Rejoin room error:', error)
+      socket.emit('error', { 
+        code: 'INTERNAL_ERROR', 
+        message: 'An error occurred' 
+      })
+    }
+  })
+
   // Handle disconnect
   socket.on('disconnect', () => {
     // Find all rooms this socket is in
