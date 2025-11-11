@@ -1,0 +1,14 @@
+{
+  "name": "nexus-arena",
+  "version": "1.0.0",
+  "description": "Your virtual hangout spot for long-distance friendships",
+  "scripts": {
+    "install-all": "cd frontend && npm install && cd ../backend && npm install",
+    "dev": "echo 'Please run backend and frontend in separate terminals' && echo 'Terminal 1: cd backend && npm run dev' && echo 'Terminal 2: cd frontend && npm run dev'",
+    "backend": "cd backend && npm run dev",
+    "frontend": "cd frontend && npm run dev"
+  },
+  "keywords": ["gaming", "social", "multiplayer"],
+  "author": "",
+  "license": "MIT"
+}
