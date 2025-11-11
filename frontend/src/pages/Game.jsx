@@ -7,8 +7,6 @@ import { Loader2 } from 'lucide-react'
 import Lobby from '../components/layout/Lobby'
 import GameRoom from '../components/layout/GameRoom'
 import ScoreBoard from '../components/layout/ScoreBoard'
-import ParticlesBackground from '../components/common/ParticlesBackground'
-import CustomCursor from '../components/common/CustomCursor'
 
 function Game() {
   const navigate = useNavigate()
@@ -50,70 +48,58 @@ function Game() {
   // Loading state
   if (isLoading) {
     return (
-      <>
-        <CustomCursor />
-        <ParticlesBackground />
-        <div className="min-h-screen bg-pattern flex items-center justify-center content-wrapper">
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <motion.div
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className="text-center"
+        >
           <motion.div
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            className="text-center"
+            animate={{ rotate: 360 }}
+            transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
+            className="inline-block mb-4"
           >
-            <motion.div
-              animate={{ rotate: 360 }}
-              transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
-              className="inline-block mb-4"
-            >
-              <Loader2 className="w-16 h-16 text-primary" />
-            </motion.div>
-            <p className="text-xl font-bold text-text">Loading game...</p>
+            <Loader2 className="w-12 h-12 text-primary-500" />
           </motion.div>
-        </div>
-      </>
+          <p className="text-lg font-medium text-slate-900">Loading game...</p>
+        </motion.div>
+      </div>
     )
   }
 
   // No room code - show error
   if (!roomCode && gameStatus === 'idle') {
     return (
-      <>
-        <CustomCursor />
-        <ParticlesBackground />
-        <div className="min-h-screen bg-pattern flex items-center justify-center p-4 content-wrapper">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="card max-w-md w-full text-center"
+      <div className="min-h-screen bg-background flex items-center justify-center p-4">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="card max-w-md w-full text-center"
+        >
+          <div className="text-6xl mb-4">😕</div>
+          <h2 className="text-2xl font-semibold mb-4 text-slate-900">No Room Found</h2>
+          <p className="text-slate-600 mb-6">
+            You need to create or join a room first.
+          </p>
+          <button
+            onClick={() => navigate('/')}
+            className="btn-primary w-full"
           >
-            <div className="text-6xl mb-4">😕</div>
-            <h2 className="text-2xl font-bold mb-4 text-text">No Room Found</h2>
-            <p className="text-textLight mb-6">
-              You need to create or join a room first.
-            </p>
-            <button
-              onClick={() => navigate('/')}
-              className="btn-primary w-full"
-            >
-              Go to Home
-            </button>
-          </motion.div>
-        </div>
-      </>
+            Go to Home
+          </button>
+        </motion.div>
+      </div>
     )
   }
 
   return (
-    <>
-      <CustomCursor />
-      <ParticlesBackground />
-      <div className="min-h-screen bg-pattern content-wrapper">
-        {(gameStatus === 'lobby' || (gameStatus === 'idle' && roomCode)) && (
-          <Lobby gameType={gameType} />
-        )}
-        {gameStatus === 'playing' && <GameRoom />}
-        {gameStatus === 'finished' && <ScoreBoard />}
-      </div>
-    </>
+    <div className="min-h-screen bg-background">
+      {(gameStatus === 'lobby' || (gameStatus === 'idle' && roomCode)) && (
+        <Lobby gameType={gameType} />
+      )}
+      {gameStatus === 'playing' && <GameRoom />}
+      {gameStatus === 'finished' && <ScoreBoard />}
+    </div>
   )
 }
 

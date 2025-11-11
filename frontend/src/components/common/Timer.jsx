@@ -45,34 +45,34 @@ function Timer({ duration, onComplete, warning = 10 }) {
             cy="50%"
             r="45"
             stroke="currentColor"
-            strokeWidth="6"
+            strokeWidth="4"
             fill="transparent"
-            className="text-border"
+            className="text-accent-200"
           />
           <motion.circle
             cx="50%"
             cy="50%"
             r="45"
             stroke="currentColor"
-            strokeWidth="6"
+            strokeWidth="4"
             fill="transparent"
             strokeDasharray={circumference}
             strokeDashoffset={circumference - (percentage / 100) * circumference}
-            className={isWarning ? 'text-red-500' : 'text-primary'}
+            className={isWarning ? 'text-red-500' : 'text-primary-500'}
             strokeLinecap="round"
-            animate={isWarning ? { opacity: [1, 0.5, 1] } : {}}
-            transition={{ duration: 0.5, repeat: isWarning ? Infinity : 0 }}
+            animate={isWarning ? { opacity: [1, 0.7, 1] } : {}}
+            transition={{ duration: 0.8, repeat: isWarning ? Infinity : 0 }}
           />
         </svg>
         <div className="absolute inset-0 flex items-center justify-center">
-          <span className={`text-2xl sm:text-3xl font-bold ${isWarning ? 'text-red-500' : 'text-text'}`}>
+          <span className={`text-xl sm:text-2xl font-semibold ${isWarning ? 'text-red-500' : 'text-slate-900'}`}>
             {timeLeft}
           </span>
         </div>
       </div>
       {isWarning && (
-        <p className="text-red-500 text-xs sm:text-sm mt-2 animate-pulse font-bold">
-          Time running out!
+        <p className="text-red-500 text-xs mt-2 font-medium">
+          Time running out
         </p>
       )}
     </div>

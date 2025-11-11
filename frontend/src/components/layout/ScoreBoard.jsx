@@ -3,8 +3,6 @@ import { useGame } from '../../contexts/GameContext'
 import { motion } from 'framer-motion'
 import { Trophy, RotateCcw, Home } from 'lucide-react'
 import Button from '../common/Button'
-import ParticlesBackground from '../common/ParticlesBackground'
-import CustomCursor from '../common/CustomCursor'
 
 function ScoreBoard() {
   const navigate = useNavigate()
@@ -25,106 +23,98 @@ function ScoreBoard() {
   const finalScores = gameState?.finalScores || {}
 
   return (
-    <>
-      <CustomCursor />
-      <ParticlesBackground />
-      <div className="min-h-screen bg-pattern flex items-center justify-center p-4 sm:p-6 lg:p-8 content-wrapper">
-        <div className="max-w-3xl w-full">
-          {/* Winner Announcement */}
-          <motion.div
-            initial={{ scale: 0.8, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            transition={{ duration: 0.5 }}
-            className="text-center mb-6 sm:mb-8"
-          >
+    <div className="min-h-screen bg-background flex items-center justify-center p-4 sm:p-6 lg:p-8">
+      <div className="max-w-3xl w-full">
+        {/* Winner Announcement */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.3 }}
+          className="text-center mb-8"
+        >
+          <div className="inline-flex items-center justify-center w-20 h-20 bg-secondary-100 rounded-2xl mb-4">
+            <Trophy className="w-10 h-10 text-secondary-600" />
+          </div>
+          <h1 className="text-4xl sm:text-5xl font-semibold mb-4 text-slate-900">
+            Game Over
+          </h1>
+          {winner && (
             <motion.div
-              animate={{ rotate: [0, 10, -10, 0] }}
-              transition={{ duration: 2, repeat: Infinity }}
-              className="inline-block p-6 sm:p-8 bg-gradient-to-br from-secondary to-accent rounded-3xl mb-4 sm:mb-6"
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.2 }}
             >
-              <Trophy className="w-16 h-16 sm:w-20 sm:h-20 text-white" strokeWidth={2.5} />
+              <p className="text-2xl font-semibold text-slate-900 mb-2">
+                {winner.username || winner.email} Wins!
+              </p>
+              <p className="text-slate-600">
+                Congratulations! 🎉
+              </p>
             </motion.div>
-            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold mb-3 sm:mb-4 text-gradient-animated">
-              Game Over!
-            </h1>
-            {winner && (
+          )}
+        </motion.div>
+
+        {/* Final Scores */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.3 }}
+          className="card mb-8"
+        >
+          <h2 className="text-2xl font-semibold mb-6 text-center text-slate-900">
+            Final Scores
+          </h2>
+          <div className="space-y-3">
+            {Object.entries(finalScores).map(([playerId, score], index) => (
               <motion.div
-                initial={{ y: 20, opacity: 0 }}
-                animate={{ y: 0, opacity: 1 }}
-                transition={{ delay: 0.3 }}
+                key={playerId}
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.4 + index * 0.1 }}
+                className="flex items-center justify-between p-4 bg-accent-50 rounded-xl"
               >
-                <p className="text-2xl sm:text-3xl font-bold text-text mb-2">
-                  {winner.username || winner.email} Wins!
-                </p>
-                <p className="text-base sm:text-lg text-textLight">
-                  Congratulations! 🎉
-                </p>
-              </motion.div>
-            )}
-          </motion.div>
-
-          {/* Final Scores */}
-          <motion.div
-            initial={{ y: 20, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            transition={{ delay: 0.5 }}
-            className="card mb-6 sm:mb-8"
-          >
-            <h2 className="text-2xl sm:text-3xl font-bold mb-4 sm:mb-6 text-center text-text">
-              Final Scores
-            </h2>
-            <div className="space-y-3 sm:space-y-4">
-              {Object.entries(finalScores).map(([playerId, score], index) => (
-                <motion.div
-                  key={playerId}
-                  initial={{ x: -20, opacity: 0 }}
-                  animate={{ x: 0, opacity: 1 }}
-                  transition={{ delay: 0.6 + index * 0.1 }}
-                  className="flex items-center justify-between p-4 sm:p-6 bg-background rounded-2xl"
-                >
-                  <div className="flex items-center gap-3 sm:gap-4">
-                    <span className="text-2xl sm:text-3xl font-bold text-textLight">
-                      #{index + 1}
-                    </span>
-                    <span className="font-bold text-base sm:text-lg text-text">
-                      Player {index + 1}
-                    </span>
-                  </div>
-                  <span className="text-2xl sm:text-3xl font-bold text-primary">
-                    {score} pts
+                <div className="flex items-center gap-4">
+                  <span className="text-2xl font-semibold text-slate-400">
+                    #{index + 1}
                   </span>
-                </motion.div>
-              ))}
-            </div>
-          </motion.div>
+                  <span className="font-medium text-slate-900">
+                    Player {index + 1}
+                  </span>
+                </div>
+                <span className="text-xl font-semibold text-primary-600">
+                  {score} pts
+                </span>
+              </motion.div>
+            ))}
+          </div>
+        </motion.div>
 
-          {/* Action Buttons */}
-          <motion.div
-            initial={{ y: 20, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            transition={{ delay: 0.8 }}
-            className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center"
+        {/* Action Buttons */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.6 }}
+          className="flex flex-col sm:flex-row gap-3 justify-center"
+        >
+          <Button 
+            variant="primary" 
+            onClick={handlePlayAgain}
+            className="flex items-center justify-center gap-2"
           >
-            <Button 
-              variant="primary" 
-              onClick={handlePlayAgain}
-              className="flex items-center justify-center gap-2"
-            >
-              <RotateCcw className="w-4 h-4 sm:w-5 sm:h-5" />
-              Play Again
-            </Button>
-            <Button 
-              variant="outline" 
-              onClick={handleReturnToHome}
-              className="flex items-center justify-center gap-2"
-            >
-              <Home className="w-4 h-4 sm:w-5 sm:h-5" />
-              Return to Home
-            </Button>
-          </motion.div>
-        </div>
+            <RotateCcw className="w-4 h-4" />
+            Play Again
+          </Button>
+          <Button 
+            variant="outline" 
+            onClick={handleReturnToHome}
+            className="flex items-center justify-center gap-2"
+          >
+            <Home className="w-4 h-4" />
+            Return to Home
+          </Button>
+        </motion.div>
       </div>
-    </>
+    </div>
   )
 }
 

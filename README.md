@@ -53,6 +53,11 @@ Group party games:
 - **[COMMANDS.md](COMMANDS.md)** - All commands reference ⌨️
 - **[CONTRIBUTING.md](CONTRIBUTING.md)** - Contribution guidelines 🤝
 
+### 🎨 Design System
+
+- **[frontend/DESIGN_SYSTEM.md](frontend/DESIGN_SYSTEM.md)** - Complete design system documentation 🎨
+- **[frontend/DESIGN_QUICK_REFERENCE.md](frontend/DESIGN_QUICK_REFERENCE.md)** - Quick reference guide 📋
+
 ## 📋 Prerequisites
 
 - Node.js v18 or higher

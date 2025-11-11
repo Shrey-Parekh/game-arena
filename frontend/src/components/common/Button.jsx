@@ -19,7 +19,7 @@ function Button({
       type={type}
       onClick={onClick}
       disabled={disabled}
-      className={`${variants[variant]} ${disabled ? 'opacity-50 cursor-not-allowed' : ''} ${className}`}
+      className={`${variants[variant]} ${className}`}
       {...props}
     >
       {children}

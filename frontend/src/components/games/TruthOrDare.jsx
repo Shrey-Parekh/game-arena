@@ -4,7 +4,7 @@ import { useGame } from '../../contexts/GameContext'
 import { useAuth } from '../../contexts/AuthContext'
 import { useNavigate } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Heart, Flame, Zap, Send, Users, Crown, ArrowLeft, Image, X } from 'lucide-react'
+import { Heart, Flame, Zap, Send, Users, Crown, ArrowLeft, Image, X, MessageCircle } from 'lucide-react'
 import Button from '../common/Button'
 import toast, { Toaster } from 'react-hot-toast'
 
@@ -52,7 +52,7 @@ function TruthOrDare() {
         questionType: data.type,
         timestamp: new Date().toISOString()
       }])
-      toast.success(`New ${data.type}!`, { icon: data.type === 'truth' ? '💭' : '⚡' })
+      toast.success(`New ${data.type}!`)
     })
 
     socket.on('show-selection', () => {
@@ -72,7 +72,7 @@ function TruthOrDare() {
 
     socket.on('spice-level-changed', (data) => {
       setSpiceLevel(data.spiceLevel)
-      toast.success(`Spice level: ${data.spiceLevel}`, { icon: '🌶️' })
+      toast.success(`Spice level: ${data.spiceLevel}`)
     })
 
     return () => {
@@ -186,53 +186,63 @@ function TruthOrDare() {
       id: 'friends', 
       name: 'Friends', 
       icon: Users, 
-      color: 'from-blue-500 to-cyan-500', 
+      color: 'bg-primary-100 text-primary-600',
       desc: 'Fun with friends'
     },
     { 
       id: 'couples', 
       name: 'Couples', 
       icon: Heart, 
-      color: 'from-pink-500 to-rose-500', 
+      color: 'bg-secondary-100 text-secondary-600',
       desc: 'Romantic & intimate'
     }
   ]
 
   const spiceLevels = [
-    { id: 'mild', name: 'Mild', icon: Heart, color: 'from-green-500 to-emerald-500' },
-    { id: 'spicy', name: 'Spicy', icon: Flame, color: 'from-orange-500 to-red-500' },
-    { id: 'extreme', name: 'Extreme', icon: Zap, color: 'from-red-500 to-pink-500' }
+    { id: 'mild', name: 'Mild', icon: Heart },
+    { id: 'spicy', name: 'Spicy', icon: Flame },
+    { id: 'extreme', name: 'Extreme', icon: Zap }
   ]
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-background to-border">
-      <Toaster position="top-center" />
+    <div className="min-h-screen bg-background">
+      <Toaster 
+        position="top-center"
+        toastOptions={{
+          style: {
+            background: '#fff',
+            color: '#0f172a',
+            border: '1px solid #e2e8f0',
+            borderRadius: '0.75rem',
+            padding: '12px 16px',
+          },
+        }}
+      />
       
       {/* Mode Selection Phase */}
       {phase === 'mode-select' && (
         <div className="min-h-screen flex items-center justify-center p-4">
           <motion.div 
-            initial={{ scale: 0.9, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
             className="card max-w-2xl w-full"
           >
             <div className="flex items-center justify-between mb-6">
-              <h2 className="text-2xl sm:text-3xl font-bold text-text">
+              <h2 className="text-2xl font-semibold text-slate-900">
                 {isHost ? 'Choose Your Mode' : 'Waiting for Host'}
               </h2>
-              <Button
-                variant="outline"
+              <button
                 onClick={handleLeaveGame}
-                className="px-3 py-2"
+                className="p-2 hover:bg-accent-50 rounded-lg transition-colors"
               >
-                <X className="w-5 h-5" />
-              </Button>
+                <X className="w-5 h-5 text-slate-600" />
+              </button>
             </div>
             
             {!isHost && (
-              <div className="text-center mb-6">
-                <Crown className="w-12 h-12 mx-auto text-secondary mb-2" />
-                <p className="text-textLight">Host is selecting the game mode...</p>
+              <div className="text-center mb-6 py-8">
+                <Crown className="w-12 h-12 mx-auto text-secondary-600 mb-3" />
+                <p className="text-slate-600">Host is selecting the game mode...</p>
               </div>
             )}
             
@@ -240,20 +250,18 @@ function TruthOrDare() {
               {modes.map((modeOption) => {
                 const Icon = modeOption.icon
                 return (
-                  <motion.button
+                  <button
                     key={modeOption.id}
-                    whileHover={isHost ? { scale: 1.02 } : {}}
-                    whileTap={isHost ? { scale: 0.98 } : {}}
                     onClick={() => isHost && handleModeSelect(modeOption.id)}
                     disabled={!isHost}
-                    className={`card-hover text-center p-6 ${!isHost ? 'opacity-50 cursor-not-allowed' : ''}`}
+                    className={`card-hover text-left p-6 ${!isHost ? 'opacity-50 cursor-not-allowed' : ''}`}
                   >
-                    <div className={`inline-block p-6 bg-gradient-to-br ${modeOption.color} rounded-2xl mb-3`}>
-                      <Icon className="w-12 h-12 text-white" strokeWidth={2.5} />
+                    <div className={`inline-flex items-center justify-center w-12 h-12 ${modeOption.color} rounded-xl mb-4`}>
+                      <Icon className="w-6 h-6" />
                     </div>
-                    <h3 className="font-bold text-xl mb-1 text-text">{modeOption.name}</h3>
-                    <p className="text-sm text-textLight">{modeOption.desc}</p>
-                  </motion.button>
+                    <h3 className="font-semibold text-lg mb-1 text-slate-900">{modeOption.name}</h3>
+                    <p className="text-sm text-slate-600">{modeOption.desc}</p>
+                  </button>
                 )
               })}
             </div>
@@ -265,46 +273,36 @@ function TruthOrDare() {
       {phase === 'playing' && mode && (
         <div className="h-screen flex flex-col">
           {/* Header */}
-          <div className="bg-card border-b border-border px-4 py-3 flex items-center justify-between">
+          <div className="bg-surface border-b border-border px-4 py-3 flex items-center justify-between">
             <div className="flex items-center gap-3">
               {isHost && (
                 <button
                   onClick={handleBackToModeSelect}
-                  className="p-2 hover:bg-background rounded-lg transition-colors"
+                  className="p-2 hover:bg-accent-50 rounded-lg transition-colors"
                 >
-                  <ArrowLeft className="w-5 h-5 text-text" />
+                  <ArrowLeft className="w-5 h-5 text-slate-600" />
                 </button>
               )}
               <div>
-                <h3 className="font-bold text-lg text-text">Truth or Dare</h3>
-                <p className="text-xs text-textLight">
+                <h3 className="font-semibold text-lg text-slate-900">Truth or Dare</h3>
+                <p className="text-xs text-slate-400">
                   {players.length} player{players.length !== 1 ? 's' : ''}
                 </p>
               </div>
             </div>
             
             <div className="flex items-center gap-2">
-              <motion.span 
-                key={mode}
-                initial={{ scale: 0.8, opacity: 0 }}
-                animate={{ scale: 1, opacity: 1 }}
-                className="badge badge-primary capitalize text-xs"
-              >
+              <span className="badge-primary capitalize text-xs">
                 {mode}
-              </motion.span>
-              <motion.span 
-                key={spiceLevel}
-                initial={{ scale: 0.8, opacity: 0 }}
-                animate={{ scale: 1, opacity: 1 }}
-                className="badge badge-secondary capitalize text-xs"
-              >
+              </span>
+              <span className="badge-secondary capitalize text-xs">
                 {spiceLevel}
-              </motion.span>
+              </span>
               <button
                 onClick={handleLeaveGame}
-                className="p-2 hover:bg-background rounded-lg transition-colors ml-2"
+                className="p-2 hover:bg-accent-50 rounded-lg transition-colors ml-2"
               >
-                <X className="w-5 h-5 text-text" />
+                <X className="w-5 h-5 text-slate-600" />
               </button>
             </div>
           </div>
@@ -312,33 +310,31 @@ function TruthOrDare() {
           <div className="flex-1 flex overflow-hidden">
             {/* Sidebar - Host Controls (Desktop) */}
             {isHost && (
-              <div className="hidden lg:block w-64 bg-card border-r border-border p-4 space-y-4 overflow-y-auto">
-                <div className="flex items-center gap-2 mb-4">
-                  <Crown className="w-5 h-5 text-secondary" />
-                  <h3 className="font-bold text-text">Host Controls</h3>
+              <div className="hidden lg:block w-64 bg-surface border-r border-border p-4 space-y-6 overflow-y-auto">
+                <div className="flex items-center gap-2">
+                  <Crown className="w-4 h-4 text-secondary-600" />
+                  <h3 className="font-semibold text-slate-900 text-sm">Host Controls</h3>
                 </div>
 
                 {/* Spice Level */}
                 <div>
-                  <h4 className="text-sm font-semibold text-text mb-2">Spice Level</h4>
+                  <h4 className="text-xs font-medium text-slate-600 mb-2 uppercase tracking-wide">Spice Level</h4>
                   <div className="space-y-2">
                     {spiceLevels.map((level) => {
                       const Icon = level.icon
                       return (
-                        <motion.button
+                        <button
                           key={level.id}
                           onClick={() => handleSpiceLevelChange(level.id)}
-                          whileHover={{ scale: 1.02 }}
-                          whileTap={{ scale: 0.98 }}
-                          className={`w-full flex items-center gap-2 p-2.5 rounded-lg transition-all text-sm ${
+                          className={`w-full flex items-center gap-2 p-2.5 rounded-lg text-sm transition-all ${
                             spiceLevel === level.id 
-                              ? 'bg-primary text-white shadow-lg' 
-                              : 'bg-background hover:bg-border text-text'
+                              ? 'bg-primary-500 text-white shadow-sm' 
+                              : 'bg-accent-50 hover:bg-accent-100 text-slate-600'
                           }`}
                         >
                           <Icon className="w-4 h-4" />
-                          <span className="font-semibold">{level.name}</span>
-                        </motion.button>
+                          <span className="font-medium">{level.name}</span>
+                        </button>
                       )
                     })}
                   </div>
@@ -346,21 +342,21 @@ function TruthOrDare() {
 
                 {/* Question Controls */}
                 <div>
-                  <h4 className="text-sm font-semibold text-text mb-2">Get Question</h4>
+                  <h4 className="text-xs font-medium text-slate-600 mb-2 uppercase tracking-wide">Get Question</h4>
                   <div className="space-y-2">
                     <Button
                       variant="primary"
                       onClick={() => handleGetQuestion('truth')}
                       className="w-full text-sm"
                     >
-                      💭 Truth
+                      Truth
                     </Button>
                     <Button
                       variant="secondary"
                       onClick={() => handleGetQuestion('dare')}
                       className="w-full text-sm"
                     >
-                      ⚡ Dare
+                      Dare
                     </Button>
                     {currentQuestion && (
                       <Button
@@ -379,10 +375,11 @@ function TruthOrDare() {
             {/* Chat Area */}
             <div className="flex-1 flex flex-col bg-background">
               {/* Messages */}
-              <div className="flex-1 overflow-y-auto p-4 space-y-3">
+              <div className="flex-1 overflow-y-auto p-4 space-y-4">
                 {chatMessages.length === 0 && (
                   <div className="h-full flex items-center justify-center">
-                    <div className="text-center text-textLight">
+                    <div className="text-center text-slate-400">
+                      <MessageCircle className="w-12 h-12 mx-auto mb-3 text-accent-300" />
                       <p className="text-sm">
                         {isHost ? 'Click "Truth" or "Dare" to start!' : 'Waiting for host to start...'}
                       </p>
@@ -394,7 +391,7 @@ function TruthOrDare() {
                   {chatMessages.map((message, index) => (
                     <motion.div
                       key={index}
-                      initial={{ opacity: 0, y: 20 }}
+                      initial={{ opacity: 0, y: 10 }}
                       animate={{ opacity: 1, y: 0 }}
                       className={`${
                         message.type === 'system' 
@@ -405,32 +402,32 @@ function TruthOrDare() {
                       }`}
                     >
                       {message.type === 'system' ? (
-                        <div className={`bg-gradient-to-r ${
+                        <div className={`border-l-4 ${
                           message.questionType === 'truth' 
-                            ? 'from-primary/20 to-primary/10 border-l-4 border-primary' 
-                            : 'from-secondary/20 to-secondary/10 border-l-4 border-secondary'
-                        } p-4 rounded-r-xl`}>
+                            ? 'bg-primary-50 border-primary-500' 
+                            : 'bg-secondary-50 border-secondary-500'
+                        } p-4 rounded-r-lg`}>
                           <span className={`badge ${
                             message.questionType === 'truth' ? 'badge-primary' : 'badge-secondary'
                           } text-xs mb-2`}>
                             {message.questionType?.toUpperCase()}
                           </span>
-                          <p className="font-bold text-text text-base leading-relaxed">
+                          <p className="font-medium text-slate-900 text-base leading-relaxed">
                             {message.content}
                           </p>
                         </div>
                       ) : (
                         <div className={`${
                           message.playerId === user?.id
-                            ? 'bg-primary text-white'
-                            : 'bg-card text-text'
-                        } p-3 rounded-2xl shadow-sm`}>
+                            ? 'bg-primary-500 text-white'
+                            : 'bg-surface text-slate-900 border border-border'
+                        } p-3 rounded-xl shadow-sm`}>
                           <div className="flex items-center gap-2 mb-1">
-                            <span className="font-semibold text-xs">
+                            <span className="font-medium text-xs">
                               {message.playerId === user?.id ? 'You' : message.playerName}
                             </span>
                             <span className={`text-xs ${
-                              message.playerId === user?.id ? 'text-white/70' : 'text-textLight'
+                              message.playerId === user?.id ? 'text-white/70' : 'text-slate-400'
                             }`}>
                               {new Date(message.timestamp).toLocaleTimeString([], { 
                                 hour: '2-digit', 
@@ -458,21 +455,21 @@ function TruthOrDare() {
 
               {/* Mobile Host Controls */}
               {isHost && (
-                <div className="lg:hidden bg-card border-t border-border p-3">
+                <div className="lg:hidden bg-surface border-t border-border p-3">
                   <div className="flex gap-2 overflow-x-auto pb-2">
                     <Button
                       variant="primary"
                       onClick={() => handleGetQuestion('truth')}
                       className="text-xs px-3 py-2 whitespace-nowrap"
                     >
-                      💭 Truth
+                      Truth
                     </Button>
                     <Button
                       variant="secondary"
                       onClick={() => handleGetQuestion('dare')}
                       className="text-xs px-3 py-2 whitespace-nowrap"
                     >
-                      ⚡ Dare
+                      Dare
                     </Button>
                     {spiceLevels.map((level) => {
                       const Icon = level.icon
@@ -480,10 +477,10 @@ function TruthOrDare() {
                         <button
                           key={level.id}
                           onClick={() => handleSpiceLevelChange(level.id)}
-                          className={`flex items-center gap-1 px-3 py-2 rounded-lg text-xs whitespace-nowrap ${
+                          className={`flex items-center gap-1 px-3 py-2 rounded-lg text-xs whitespace-nowrap transition-all ${
                             spiceLevel === level.id 
-                              ? 'bg-primary text-white' 
-                              : 'bg-background text-text'
+                              ? 'bg-primary-500 text-white' 
+                              : 'bg-accent-50 text-slate-600'
                           }`}
                         >
                           <Icon className="w-3 h-3" />
@@ -496,19 +493,19 @@ function TruthOrDare() {
               )}
 
               {/* Input Area */}
-              <div className="bg-card border-t border-border p-4">
+              <div className="bg-surface border-t border-border p-4">
                 {imagePreview && (
                   <div className="mb-3 relative inline-block">
                     <img 
                       src={imagePreview} 
                       alt="Preview" 
-                      className="h-20 rounded-lg"
+                      className="h-20 rounded-lg border border-border"
                     />
                     <button
                       onClick={handleRemoveImage}
-                      className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1"
+                      className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 hover:bg-red-600 transition-colors"
                     >
-                      <X className="w-4 h-4" />
+                      <X className="w-3 h-3" />
                     </button>
                   </div>
                 )}
@@ -524,9 +521,9 @@ function TruthOrDare() {
                   <button
                     type="button"
                     onClick={() => fileInputRef.current?.click()}
-                    className="p-3 hover:bg-background rounded-lg transition-colors"
+                    className="p-3 hover:bg-accent-50 rounded-lg transition-colors"
                   >
-                    <Image className="w-5 h-5 text-textLight" />
+                    <Image className="w-5 h-5 text-slate-600" />
                   </button>
                   <input
                     ref={messageInputRef}
@@ -534,7 +531,7 @@ function TruthOrDare() {
                     value={newMessage}
                     onChange={(e) => setNewMessage(e.target.value)}
                     placeholder="Type your message..."
-                    className="input-field flex-1 text-sm"
+                    className="input-field flex-1"
                     maxLength={500}
                   />
                   <Button

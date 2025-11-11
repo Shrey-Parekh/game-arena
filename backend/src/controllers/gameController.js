@@ -2,6 +2,8 @@ import { supabase } from '../config/supabase.js'
 
 export async function getRandomQuestion(type, spiceLevel, mode = 'friends', excludeIds = []) {
   try {
+    console.log('🔍 Fetching question with params:', { type, spiceLevel, mode, excludeIdsCount: excludeIds.length })
+    
     let query = supabase
       .from('truth_or_dare_questions')
       .select('*')
@@ -15,13 +17,27 @@ export async function getRandomQuestion(type, spiceLevel, mode = 'friends', excl
 
     const { data, error } = await query.limit(10)
 
+    console.log('📊 Query result:', { 
+      foundQuestions: data?.length || 0, 
+      error: error?.message,
+      sampleQuestion: data?.[0]?.content?.substring(0, 50)
+    })
+
     if (error) throw error
     if (!data || data.length === 0) {
+      // Try to get total count to help debug
+      const { count } = await supabase
+        .from('truth_or_dare_questions')
+        .select('*', { count: 'exact', head: true })
+      
+      console.error('❌ No questions found. Total questions in DB:', count)
+      console.error('❌ Search params:', { type, spiceLevel, mode })
       throw new Error('No questions available')
     }
 
     // Return random question from results
     const randomIndex = Math.floor(Math.random() * data.length)
+    console.log('✅ Returning question:', data[randomIndex].content.substring(0, 50) + '...')
     return { data: data[randomIndex], error: null }
   } catch (error) {
     console.error('Error fetching question:', error)

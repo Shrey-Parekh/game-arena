@@ -1,7 +1,5 @@
 import { useGame } from '../../contexts/GameContext'
 import TruthOrDare from '../games/TruthOrDare'
-import ParticlesBackground from '../common/ParticlesBackground'
-import CustomCursor from '../common/CustomCursor'
 
 function GameRoom() {
   const { gameType } = useGame()
@@ -22,13 +20,9 @@ function GameRoom() {
   }
 
   return (
-    <>
-      <CustomCursor />
-      <ParticlesBackground />
-      <div className="min-h-screen content-wrapper">
-        {renderGame()}
-      </div>
-    </>
+    <div className="min-h-screen">
+      {renderGame()}
+    </div>
   )
 }
 
