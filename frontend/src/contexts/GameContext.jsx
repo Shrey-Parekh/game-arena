@@ -169,11 +169,17 @@ export const GameProvider = ({ children }) => {
     resetGameState()
   }
 
-  const startGame = (selectedGameType) => {
-    console.log('startGame called', { socket: !!socket, roomCode, isHost, selectedGameType })
+  const startGame = (selectedGameType, settings = {}) => {
+    console.log('startGame called', { socket: !!socket, roomCode, isHost, selectedGameType, settings })
     if (socket && roomCode && isHost) {
-      console.log('Emitting start-game to server')
-      socket.emit('start-game', { roomCode, gameType: selectedGameType })
+      // Emit different events based on game type
+      if (selectedGameType === 'imposter') {
+        console.log('Emitting start-imposter-game to server with settings:', settings)
+        socket.emit('start-imposter-game', { roomCode, settings })
+      } else {
+        console.log('Emitting start-game to server')
+        socket.emit('start-game', { roomCode, gameType: selectedGameType })
+      }
     } else {
       console.error('Cannot start game:', { hasSocket: !!socket, roomCode, isHost })
     }

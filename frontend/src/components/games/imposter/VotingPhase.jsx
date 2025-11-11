@@ -53,7 +53,7 @@ function VotingPhase({ gameState, players, timeRemaining }) {
             </div>
           </div>
           
-          <h2 className="text-3xl sm:text-4xl font-bold text-slate-100 mb-2">
+          <h2 className="text-3xl sm:text-4xl font-bold text-text mb-2">
             Who is the Imposter?
           </h2>
           <p className="text-slate-400">Read the answers and vote for the most suspicious one</p>
@@ -66,9 +66,9 @@ function VotingPhase({ gameState, players, timeRemaining }) {
           transition={{ delay: 0.1 }}
           className="mb-8"
         >
-          <h3 className="text-lg font-semibold text-slate-100 mb-4 flex items-center gap-2">
+          <h3 className="text-lg font-semibold text-text mb-4 flex items-center gap-2">
             <Vote className="w-5 h-5" />
-            Anonymous Answers
+            Player Answers
           </h3>
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -80,10 +80,15 @@ function VotingPhase({ gameState, players, timeRemaining }) {
                 transition={{ delay: 0.2 + index * 0.05 }}
                 className="card-hover"
               >
-                <div className="inline-flex items-center gap-2 px-3 py-1 bg-accent-100 text-accent-600 rounded-lg mb-3 text-sm font-semibold">
-                  Answer {index + 1}
+                <div className="flex items-center justify-between mb-3">
+                  <div className="inline-flex items-center gap-2 px-3 py-1 bg-primary-100 text-primary-600 rounded-lg text-sm font-semibold">
+                    {answer.playerName || 'Unknown'}
+                  </div>
+                  <div className="text-xs text-slate-400">
+                    Answer {index + 1}
+                  </div>
                 </div>
-                <p className="text-slate-100 leading-relaxed min-h-[4rem]">
+                <p className="text-text leading-relaxed min-h-[4rem]">
                   {answer.text || <span className="text-slate-500 italic">No answer submitted</span>}
                 </p>
               </motion.div>
@@ -99,7 +104,7 @@ function VotingPhase({ gameState, players, timeRemaining }) {
           className="card"
         >
           <div className="flex items-center justify-between mb-4">
-            <h3 className="text-lg font-semibold text-slate-100">Cast Your Vote</h3>
+            <h3 className="text-lg font-semibold text-text">Cast Your Vote</h3>
             {hasVoted && (
               <span className="flex items-center gap-1 text-success text-sm">
                 <CheckCircle className="w-4 h-4" />
@@ -127,7 +132,7 @@ function VotingPhase({ gameState, players, timeRemaining }) {
                       ? 'bg-slate-700 border-slate-600 text-slate-500 cursor-not-allowed'
                       : hasVoted
                       ? 'bg-surface border-border text-slate-400 cursor-not-allowed'
-                      : 'bg-surface border-border text-slate-100 hover:border-primary-600'
+                      : 'bg-surface border-border text-text hover:border-primary-600'
                   }`}
                 >
                   <div className="flex flex-col items-center gap-2">

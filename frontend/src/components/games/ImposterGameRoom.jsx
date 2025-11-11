@@ -8,13 +8,15 @@ import FinalResults from './imposter/FinalResults'
 
 function ImposterGameRoom() {
   const { gameState, players } = useGame()
-  const [timeRemaining, setTimeRemaining] = useState(60)
+  const [timeRemaining, setTimeRemaining] = useState(90)
 
   // Calculate time remaining based on phase
   useEffect(() => {
     if (!gameState || !gameState.phaseStartTime) return
 
-    const phaseDuration = gameState.phase === 'answer' ? 60 : 90 // 60s for answer, 90s for voting
+    const phaseDuration = gameState.phase === 'answer' ? (gameState.answerTime || 90) : gameState.phase === 'voting' ? 90 : 0
+    
+    if (phaseDuration === 0) return // No timer for reveal/final phases
     
     const interval = setInterval(() => {
       const elapsed = Math.floor((Date.now() - gameState.phaseStartTime) / 1000)

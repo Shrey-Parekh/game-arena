@@ -128,8 +128,14 @@ export function setupImposterHandlers(io, socket) {
   socket.on('start-imposter-game', async (data) => {
     console.log('📥 Received start-imposter-game event:', data)
     try {
-      const { roomCode } = data
+      const { roomCode, settings = {} } = data
       const userId = socket.userId
+      
+      // Extract settings with defaults
+      const answerTime = settings.answerTime || 90
+      const totalRounds = settings.totalRounds || 5
+      
+      console.log('Game settings:', { answerTime, totalRounds })
 
       console.log('User attempting to start Imposter game:', { userId, roomCode })
 
@@ -184,6 +190,8 @@ export function setupImposterHandlers(io, socket) {
       const gameState = {
         phase: 'answer',
         roundNumber: 1,
+        totalRounds: totalRounds,
+        answerTime: answerTime,
         imposterId: imposterId,
         regularPrompt: promptPair.regular_prompt,
         imposterPrompt: promptPair.imposter_prompt,
@@ -217,6 +225,8 @@ export function setupImposterHandlers(io, socket) {
           gameType: 'imposter',
           phase: 'answer',
           roundNumber: 1,
+          totalRounds: totalRounds,
+          answerTime: answerTime,
           prompt: prompt,
           isImposter: isImposter,
           phaseStartTime: gameState.phaseStartTime,
@@ -285,8 +295,16 @@ export function setupImposterHandlers(io, socket) {
         room.gameState.phase = 'voting'
         room.gameState.phaseStartTime = Date.now()
         
-        // Send shuffled answers to all players (without player IDs)
-        const answersForClient = shuffled.map(({ id, text }) => ({ id, text }))
+        // Send shuffled answers to all players WITH player names
+        const answersForClient = shuffled.map(({ id, text, playerId }) => {
+          const player = room.players.get(playerId)
+          return {
+            id,
+            text,
+            playerId,
+            playerName: player?.username || player?.email || 'Unknown'
+          }
+        })
         
         io.to(roomCode).emit('voting-phase-started', {
           phase: 'voting',
@@ -442,9 +460,10 @@ export function setupImposterHandlers(io, socket) {
         })
       }
 
-      // Check if game is complete (5 rounds)
-      if (room.gameState.roundNumber >= 5) {
-        console.log('🏁 Game complete, showing final results')
+      // Check if game is complete (dynamic total rounds)
+      const totalRounds = room.gameState.totalRounds || 5
+      if (room.gameState.roundNumber >= totalRounds) {
+        console.log(`🏁 Game complete after ${totalRounds} rounds, showing final results`)
         
         // Calculate final rankings
         const rankedPlayers = Array.from(room.players.values())
@@ -456,7 +475,9 @@ export function setupImposterHandlers(io, socket) {
           }))
           .sort((a, b) => b.totalScore - a.totalScore)
         
-        const winner = rankedPlayers[0]
+        // Find all winners (players with max score)
+        const maxScore = rankedPlayers[0]?.totalScore || 0
+        const winners = rankedPlayers.filter(p => p.totalScore === maxScore)
         
         room.gameState.phase = 'final'
         roomManager.endGame(roomCode)
@@ -464,13 +485,12 @@ export function setupImposterHandlers(io, socket) {
         io.to(roomCode).emit('game-completed', {
           phase: 'final',
           rankedPlayers,
-          winnerId: winner.userId,
-          winnerName: winner.username,
+          winners: winners,
           finalScores: Object.fromEntries(room.gameState.scores),
           roundHistory: room.gameState.roundScores
         })
         
-        console.log('✅ Game completed, winner:', winner.username)
+        console.log('✅ Game completed, winners:', winners.map(w => w.username).join(', '))
         return
       }
 
@@ -528,6 +548,8 @@ export function setupImposterHandlers(io, socket) {
           gameType: 'imposter',
           phase: 'answer',
           roundNumber: nextRoundNumber,
+          totalRounds: room.gameState.totalRounds,
+          answerTime: room.gameState.answerTime,
           prompt: prompt,
           isImposter: isImposter,
           phaseStartTime: room.gameState.phaseStartTime,
@@ -546,7 +568,6 @@ export function setupImposterHandlers(io, socket) {
       })
     }
   })
-}
 
   // Handle player disconnection during Imposter game
   socket.on('disconnect', () => {
@@ -576,7 +597,15 @@ export function setupImposterHandlers(io, socket) {
               room.gameState.phase = 'voting'
               room.gameState.phaseStartTime = Date.now()
               
-              const answersForClient = shuffled.map(({ id, text }) => ({ id, text }))
+              const answersForClient = shuffled.map(({ id, text, playerId }) => {
+                const player = room.players.get(playerId)
+                return {
+                  id,
+                  text,
+                  playerId,
+                  playerName: player?.username || player?.email || 'Unknown'
+                }
+              })
               
               io.to(roomCode).emit('voting-phase-started', {
                 phase: 'voting',

@@ -23,8 +23,10 @@ function RevealPhase({ gameState, players }) {
     return player?.username || player?.email || 'Unknown'
   }
 
+  const totalRounds = gameState.totalRounds || 5
+  
   const handleNextRound = () => {
-    if (isHost && roundNumber < 5) {
+    if (isHost && roundNumber < totalRounds) {
       nextRound()
     }
   }
@@ -52,7 +54,7 @@ function RevealPhase({ gameState, players }) {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.4 }}
-            className="text-3xl sm:text-4xl font-bold text-slate-100 mb-3"
+            className="text-3xl sm:text-4xl font-bold text-text mb-3"
           >
             The Imposter Was...
           </motion.h2>
@@ -76,17 +78,17 @@ function RevealPhase({ gameState, players }) {
         >
           <div className="flex items-center gap-2 mb-4">
             <Eye className="w-5 h-5 text-primary-600" />
-            <h3 className="text-lg font-semibold text-slate-100">The Prompts</h3>
+            <h3 className="text-lg font-semibold text-text">The Prompts</h3>
           </div>
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="bg-surface p-4 rounded-xl border-2 border-primary-600">
               <div className="text-xs font-semibold text-primary-600 mb-2">REGULAR PLAYERS</div>
-              <p className="text-slate-100">{regularPrompt}</p>
+              <p className="text-text">{regularPrompt}</p>
             </div>
             <div className="bg-surface p-4 rounded-xl border-2 border-accent-600">
               <div className="text-xs font-semibold text-accent-600 mb-2">IMPOSTER</div>
-              <p className="text-slate-100">{imposterPrompt}</p>
+              <p className="text-text">{imposterPrompt}</p>
             </div>
           </div>
         </motion.div>
@@ -98,7 +100,7 @@ function RevealPhase({ gameState, players }) {
           transition={{ delay: 1 }}
           className="card mb-6"
         >
-          <h3 className="text-lg font-semibold text-slate-100 mb-4">Vote Results</h3>
+          <h3 className="text-lg font-semibold text-text mb-4">Vote Results</h3>
           
           <div className="space-y-3">
             {Object.entries(voteDistribution).map(([playerId, votes], index) => {
@@ -114,7 +116,7 @@ function RevealPhase({ gameState, players }) {
                   className={`p-3 rounded-xl ${isImposter ? 'bg-accent-100' : 'bg-surface'}`}
                 >
                   <div className="flex items-center justify-between mb-2">
-                    <span className={`font-medium ${isImposter ? 'text-accent-600' : 'text-slate-100'}`}>
+                    <span className={`font-medium ${isImposter ? 'text-accent-600' : 'text-text'}`}>
                       {getPlayerName(playerId)}
                       {isImposter && ' 🎭'}
                     </span>
@@ -145,7 +147,7 @@ function RevealPhase({ gameState, players }) {
         >
           <div className="flex items-center gap-2 mb-4">
             <TrendingUp className="w-5 h-5 text-secondary-600" />
-            <h3 className="text-lg font-semibold text-slate-100">Round {roundNumber} Scores</h3>
+            <h3 className="text-lg font-semibold text-text">Round {roundNumber} Scores</h3>
           </div>
           
           <div className="space-y-2">
@@ -157,7 +159,7 @@ function RevealPhase({ gameState, players }) {
                 transition={{ delay: 1.4 + index * 0.05 }}
                 className="flex items-center justify-between p-3 bg-surface rounded-xl"
               >
-                <span className="text-slate-100 font-medium">
+                <span className="text-text font-medium">
                   {getPlayerName(playerId)}
                 </span>
                 <span className="text-primary-600 font-bold text-lg">
@@ -177,7 +179,7 @@ function RevealPhase({ gameState, players }) {
         >
           <div className="flex items-center gap-2 mb-4">
             <Trophy className="w-5 h-5 text-secondary-600" />
-            <h3 className="text-lg font-semibold text-slate-100">Total Scores</h3>
+            <h3 className="text-lg font-semibold text-text">Total Scores</h3>
           </div>
           
           <div className="space-y-2">
@@ -190,7 +192,7 @@ function RevealPhase({ gameState, players }) {
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ delay: 1.6 + index * 0.05 }}
                   className={`flex items-center justify-between p-4 rounded-xl ${
-                    index === 0 ? 'bg-primary-600 text-white' : 'bg-surface text-slate-100'
+                    index === 0 ? 'bg-primary-600 text-white' : 'bg-surface text-text'
                   }`}
                 >
                   <div className="flex items-center gap-3">
@@ -204,7 +206,7 @@ function RevealPhase({ gameState, players }) {
         </motion.div>
 
         {/* Next Round Button */}
-        {isHost && roundNumber < 5 && (
+        {isHost && roundNumber < totalRounds && (
           <motion.button
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -217,7 +219,7 @@ function RevealPhase({ gameState, players }) {
           </motion.button>
         )}
 
-        {!isHost && roundNumber < 5 && (
+        {!isHost && roundNumber < totalRounds && (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}

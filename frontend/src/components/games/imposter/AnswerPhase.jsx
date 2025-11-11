@@ -47,7 +47,7 @@ function AnswerPhase({ gameState, players, timeRemaining }) {
           className="text-center mb-8"
         >
           <div className="inline-flex items-center gap-2 px-4 py-2 bg-primary-100 text-primary-600 rounded-full mb-4">
-            <span className="font-semibold">Round {gameState.roundNumber}/5</span>
+            <span className="font-semibold">Round {gameState.roundNumber}/{gameState.totalRounds || 5}</span>
           </div>
           
           <div className="flex items-center justify-center gap-3 mb-4">
@@ -67,20 +67,10 @@ function AnswerPhase({ gameState, players, timeRemaining }) {
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ delay: 0.1 }}
-          className="card mb-6"
+          className="card shadow-lg mb-6"
         >
-          {gameState.isImposter && (
-            <motion.div
-              initial={{ opacity: 0, y: -10 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="inline-flex items-center gap-2 px-3 py-1.5 bg-secondary-100 text-secondary-600 rounded-lg mb-4 text-sm font-semibold"
-            >
-              🎭 You are the Imposter!
-            </motion.div>
-          )}
-          
           <div className="bg-surface p-6 rounded-xl">
-            <p className="text-xl sm:text-2xl text-center text-slate-100 leading-relaxed">
+            <p className="text-xl sm:text-2xl text-center text-text leading-relaxed">
               {gameState.prompt}
             </p>
           </div>
@@ -93,7 +83,7 @@ function AnswerPhase({ gameState, players, timeRemaining }) {
           transition={{ delay: 0.2 }}
           className="card mb-6"
         >
-          <h3 className="text-lg font-semibold text-slate-100 mb-4">Your Answer</h3>
+          <h3 className="text-lg font-semibold text-text mb-4">Your Answer</h3>
           
           <textarea
             className="input-field w-full h-32 resize-none mb-2"
@@ -135,7 +125,7 @@ function AnswerPhase({ gameState, players, timeRemaining }) {
           className="card"
         >
           <div className="flex items-center justify-between mb-4">
-            <h3 className="text-lg font-semibold text-slate-100 flex items-center gap-2">
+            <h3 className="text-lg font-semibold text-text flex items-center gap-2">
               <Users className="w-5 h-5" />
               Players Ready
             </h3>

@@ -12,12 +12,20 @@ function Lobby({ gameType }) {
   const { user } = useAuth()
   const { roomCode, players, isHost, startGame, leaveRoom } = useGame()
   const [copied, setCopied] = useState(false)
+  
+  // Imposter game settings
+  const [answerTime, setAnswerTime] = useState(90)
+  const [totalRounds, setTotalRounds] = useState(5)
 
   const handleStartGame = () => {
     console.log('Start Game clicked', { isHost, gameType, roomCode })
     if (isHost && gameType) {
       console.log('Emitting start-game event')
-      startGame(gameType)
+      if (gameType === 'imposter') {
+        startGame(gameType, { answerTime, totalRounds })
+      } else {
+        startGame(gameType)
+      }
     }
   }
 
@@ -99,6 +107,60 @@ function Lobby({ gameType }) {
           </motion.div>
         )}
 
+        {/* Game Settings for Imposter */}
+        {gameType === 'imposter' && isHost && (
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.1 }}
+            className="card mb-6"
+          >
+            <h2 className="text-xl font-semibold text-slate-900 mb-4">Game Settings</h2>
+            
+            <div className="space-y-4">
+              {/* Answer Time Setting */}
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-2">
+                  Answer Time: {answerTime} seconds
+                </label>
+                <input
+                  type="range"
+                  min="60"
+                  max="150"
+                  step="10"
+                  value={answerTime}
+                  onChange={(e) => setAnswerTime(Number(e.target.value))}
+                  className="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-primary-600"
+                />
+                <div className="flex justify-between text-xs text-slate-400 mt-1">
+                  <span>60s</span>
+                  <span>150s</span>
+                </div>
+              </div>
+
+              {/* Total Rounds Setting */}
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-2">
+                  Number of Rounds: {totalRounds}
+                </label>
+                <input
+                  type="range"
+                  min="3"
+                  max="12"
+                  step="1"
+                  value={totalRounds}
+                  onChange={(e) => setTotalRounds(Number(e.target.value))}
+                  className="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-primary-600"
+                />
+                <div className="flex justify-between text-xs text-slate-400 mt-1">
+                  <span>3 rounds</span>
+                  <span>12 rounds</span>
+                </div>
+              </div>
+            </div>
+          </motion.div>
+        )}
+
         {/* Players List */}
         <motion.div 
           initial={{ opacity: 0, y: 20 }}
@@ -167,13 +229,15 @@ function Lobby({ gameType }) {
             <Button
               variant="primary"
               onClick={handleStartGame}
-              disabled={players.length < 2}
+              disabled={gameType === 'imposter' ? players.length < 3 : players.length < 2}
               className="px-12 py-4 text-lg flex items-center gap-2"
             >
-              {players.length < 2 ? (
+              {(gameType === 'imposter' && players.length < 3) || (gameType !== 'imposter' && players.length < 2) ? (
                 <>
                   <Users className="w-5 h-5" />
-                  Waiting for players...
+                  {gameType === 'imposter' 
+                    ? `Waiting for players... (${players.length}/3 minimum)`
+                    : 'Waiting for players...'}
                 </>
               ) : (
                 <>

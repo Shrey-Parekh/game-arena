@@ -76,7 +76,7 @@ function GameSelect() {
       icon: Sparkles,
       description: 'Find the imposter among your friends',
       color: 'bg-primary-100 text-primary-600',
-      available: false,
+      available: true,
       players: '3-6'
     },
     {
