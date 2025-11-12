@@ -215,7 +215,7 @@ export function setupRoomHandlers(io, socket) {
               io.to(roomCode).emit('player-left', { players })
             }
           }
-        }, 120000) // 2 minutes
+        }, 180000) // 2 minutes
       }
     })
   })
