@@ -55,7 +55,7 @@ function GameSelect() {
       icon: Dices,
       description: 'Discover secrets and shared experiences',
       color: 'bg-accent-100 text-accent-600',
-      available: false,
+      available: true,
       players: '2'
     },
     {

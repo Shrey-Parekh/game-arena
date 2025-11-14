@@ -1,6 +1,7 @@
 import { useGame } from '../../contexts/GameContext'
 import TruthOrDare from '../games/TruthOrDare'
 import ImposterGameRoom from '../games/ImposterGameRoom'
+import NeverHaveIEverGameRoom from '../games/NeverHaveIEverGameRoom'
 
 function GameRoom() {
   const { gameType } = useGame()
@@ -11,6 +12,8 @@ function GameRoom() {
         return <TruthOrDare />
       case 'imposter':
         return <ImposterGameRoom />
+      case 'never-have-i-ever':
+        return <NeverHaveIEverGameRoom />
       default:
         return (
           <div className="min-h-screen flex items-center justify-center p-4">

@@ -117,6 +117,16 @@ export const GameProvider = ({ children }) => {
       }
     })
 
+    // Never Have I Ever game events
+    socket.on('nhie:game-started', (data) => {
+      console.log('🤫 NHIE game started in GameContext:', data)
+      console.log('Setting gameState to:', data)
+      setGameType('never-have-i-ever')
+      setGameState(data)
+      setGameStatus('playing')
+      console.log('GameContext state updated')
+    })
+
     // Rejoin room on reconnect
     socket.on('connect', () => {
       console.log('Socket reconnected, attempting to rejoin room...')
@@ -143,6 +153,7 @@ export const GameProvider = ({ children }) => {
       socket.off('reveal-phase-started')
       socket.off('game-completed')
       socket.off('game-ended-insufficient-players')
+      socket.off('nhie:game-started')
     }
   }, [socket, roomCode])
 
@@ -176,6 +187,12 @@ export const GameProvider = ({ children }) => {
       if (selectedGameType === 'imposter') {
         console.log('Emitting start-imposter-game to server with settings:', settings)
         socket.emit('start-imposter-game', { roomCode, settings })
+      } else if (selectedGameType === 'never-have-i-ever') {
+        console.log('Starting NHIE game - showing category selection')
+        // NHIE game starts from CategorySelection component, so just update state
+        setGameType('never-have-i-ever')
+        setGameState({ phase: 'category' }) // Set initial state for category selection
+        setGameStatus('playing')
       } else {
         console.log('Emitting start-game to server')
         socket.emit('start-game', { roomCode, gameType: selectedGameType })

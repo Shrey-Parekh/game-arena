@@ -92,6 +92,8 @@ function Game() {
     )
   }
 
+  console.log('Game.jsx render:', { gameStatus, roomCode, gameType })
+
   return (
     <div className="min-h-screen bg-background">
       {(gameStatus === 'lobby' || (gameStatus === 'idle' && roomCode)) && (
@@ -99,6 +101,11 @@ function Game() {
       )}
       {gameStatus === 'playing' && <GameRoom />}
       {gameStatus === 'finished' && <ScoreBoard />}
+      {!gameStatus && (
+        <div className="min-h-screen flex items-center justify-center">
+          <p className="text-slate-600">No game status</p>
+        </div>
+      )}
     </div>
   )
 }
